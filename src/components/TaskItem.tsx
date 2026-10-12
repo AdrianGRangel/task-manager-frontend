@@ -1,9 +1,15 @@
-type TaskStatus = "pending" | "completed";
+import type { Task } from "../models/task.interface";
 interface TaskItemProps {
-  title: string;
-  status: TaskStatus;
+  task: Task;
 }
-export function TaskItem({ title, status }: TaskItemProps) {
+function formatTaskDate(value: string): string {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat("es-MX", {
+    dateStyle: "medium",
+  }).format(date);
+}
+export function TaskItem({ task }: TaskItemProps) {
+  const { title, status, updatedAt } = task;
   const statusLabel = status === "completed" ? "Completada" : "Pendiente";
   return (
     <article className={`task-item task-item--${status}`} role="listitem">
@@ -12,6 +18,10 @@ export function TaskItem({ title, status }: TaskItemProps) {
         <span className={`status-badge status-badge--${status}`}>
           {statusLabel}
         </span>
+        <p className="task-item__date">
+          Actualizada:{" "}
+          <time dateTime={updatedAt}>{formatTaskDate(updatedAt)}</time>
+        </p>
       </div>
       <div
         className="task-item__actions"
