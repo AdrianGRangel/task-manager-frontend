@@ -31,6 +31,13 @@ export const tasks: Task[] = [
   {
     id: "task-005",
     title: "Documentar el avance del proyecto",
+    status: "completed",
+    createdAt: "2026-09-26T16:00:00.000Z",
+    updatedAt: "2026-09-26T16:00:00.000Z",
+  },
+    {
+    id: "task-006",
+    title: "Documentar",
     status: "pending",
     createdAt: "2026-09-26T16:00:00.000Z",
     updatedAt: "2026-09-26T16:00:00.000Z",
