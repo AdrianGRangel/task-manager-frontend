@@ -1,4 +1,10 @@
+import { useState } from "react";
+import type { FormEvent } from "react";
 import type { Task } from "../models/task.interface";
+import {
+  TASK_TITLE_MAX_LENGTH,
+  validateTaskTitle,
+} from "../utils/task-validation";
 interface TaskItemProps {
   task: Task;
   onToggleStatus: (id: string) => void;
@@ -6,10 +12,9 @@ interface TaskItemProps {
   onDeleteTask: (id: string) => void;
 }
 function formatTaskDate(value: string): string {
-  const date = new Date(value);
   return new Intl.DateTimeFormat("es-MX", {
     dateStyle: "medium",
-  }).format(date);
+  }).format(new Date(value));
 }
 export function TaskItem({
   task,
@@ -17,45 +22,106 @@ export function TaskItem({
   onEditTask,
   onDeleteTask,
 }: TaskItemProps) {
-  const { title, status, updatedAt } = task;
+  const { id, title, status, updatedAt } = task;
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(title);
+  const [error, setError] = useState("");
   const statusLabel = status === "completed" ? "Completada" : "Pendiente";
-  function handleEdit() {
-    const newTitle = window.prompt("Editar tarea", title)?.trim();
-    if (newTitle) {
-      onEditTask(task.id, newTitle);
+  function handleStartEdit(): void {
+    setDraftTitle(title);
+    setError("");
+    setIsEditing(true);
+  }
+  function handleCancelEdit(): void {
+    setDraftTitle(title);
+    setError("");
+    setIsEditing(false);
+  }
+  function handleDraftChange(value: string): void {
+    setDraftTitle(value);
+    if (error) {
+      setError(validateTaskTitle(value) ?? "");
     }
   }
-
-  function handleDelete() {
-    if (window.confirm(`¿Eliminar la tarea «${title}»?`)) {
-      onDeleteTask(task.id);
+  function handleEditSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    const validationMessage = validateTaskTitle(draftTitle);
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
     }
+    onEditTask(id, draftTitle.trim());
+    setError("");
+    setIsEditing(false);
   }
-
   return (
     <article className={`task-item task-item--${status}`} role="listitem">
       <div className="task-item__content">
-        <h3 className="task-item__title">{title}</h3>
-        <span className={`status-badge status-badge--${status}`}>
-          {statusLabel}
-        </span>
-        <p className="task-item__date">
-          Actualizada:{" "}
-          <time dateTime={updatedAt}>{formatTaskDate(updatedAt)}</time>
-        </p>
+        {isEditing ? (
+          <form
+            className="task-item__edit-form"
+            onSubmit={handleEditSubmit}
+            noValidate
+          >
+            <label className="sr-only" htmlFor={`edit-task-${id}`}>
+              Editar título de la tarea
+            </label>
+            <input
+              id={`edit-task-${id}`}
+              className="task-item__edit-input"
+              value={draftTitle}
+              maxLength={TASK_TITLE_MAX_LENGTH}
+              onChange={(event) => handleDraftChange(event.target.value)}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? `edit-error-${id}` : undefined}
+              autoFocus
+            />
+            {error && (
+              <p id={`edit-error-${id}`} className="field-error" role="alert">
+                {error}
+              </p>
+            )}
+            <div className="task-item__edit-actions">
+              <button type="submit">Guardar</button>
+              <button type="button" onClick={handleCancelEdit}>
+                Cancelar
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <h3 className="task-item__title">{title}</h3>
+            <span className={`status-badge status-badge--${status}`}>
+              {statusLabel}
+            </span>
+            <p className="task-item__date">
+              Actualizada:{" "}
+              <time dateTime={updatedAt}>{formatTaskDate(updatedAt)}</time>
+            </p>
+          </>
+        )}
       </div>
       <div
         className="task-item__actions"
         role="group"
         aria-label={`Acciones para ${title}`}
       >
-        <button type="button" onClick={() => onToggleStatus(task.id)}>
-          Cambiar estado
+        <button
+          type="button"
+          onClick={() => onToggleStatus(id)}
+          disabled={isEditing}
+        >
+          {status === "completed" ? "Reabrir" : "Completar"}
         </button>
-        <button type="button" onClick={handleEdit}>
+        <button type="button" onClick={handleStartEdit} disabled={isEditing}>
           Editar
         </button>
-        <button type="button" className="button-danger" onClick={handleDelete}>
+        <button
+          type="button"
+          className="button-danger"
+          onClick={() => onDeleteTask(id)}
+          disabled={isEditing}
+        >
           Eliminar
         </button>
       </div>
