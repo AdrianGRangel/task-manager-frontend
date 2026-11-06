@@ -1,20 +1,17 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router";
 import type { Task } from "../models/task.interface";
 import {
   TASK_TITLE_MAX_LENGTH,
   validateTaskTitle,
 } from "../utils/task-validation";
+import { formatTaskDate } from "../utils/date";
 interface TaskItemProps {
   task: Task;
   onToggleStatus: (id: string) => void;
   onEditTask: (id: string, title: string) => void;
-  onDeleteTask: (id: string) => void;
-}
-function formatTaskDate(value: string): string {
-  return new Intl.DateTimeFormat("es-MX", {
-    dateStyle: "medium",
-  }).format(new Date(value));
+  onDeleteTask: (id: string) => boolean;
 }
 export function TaskItem({
   task,
@@ -106,6 +103,14 @@ export function TaskItem({
         role="group"
         aria-label={`Acciones para ${title}`}
       >
+        {!isEditing && (
+          <Link
+            className="button-link button-link--secondary"
+            to={`/tasks/${id}`}
+          >
+            Ver detalle
+          </Link>
+        )}
         <button
           type="button"
           onClick={() => onToggleStatus(id)}
@@ -119,7 +124,9 @@ export function TaskItem({
         <button
           type="button"
           className="button-danger"
-          onClick={() => onDeleteTask(id)}
+          onClick={() => {
+            onDeleteTask(id);
+          }}
           disabled={isEditing}
         >
           Eliminar
