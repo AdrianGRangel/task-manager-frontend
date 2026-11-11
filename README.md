@@ -167,3 +167,75 @@ La aplicación consume la API de tareas mediante Fetch API.
 ### Compilación
 ```bash
 pnpm build
+
+# Administrador de tareas Frontend
+SPA desarrollada con React, TypeScript, Vite,
+React Router y Fetch API.
+## Funciones actuales
+- Registro e inicio de sesión.
+- Restauración de identidad con /api/auth/me.
+- Rutas públicas y protegidas.
+- CRUD remoto de tareas.
+- Búsqueda, filtros, ordenamiento y paginación.
+- Eliminación disponible para admin.
+- Manejo de carga, vacío, error, 401 y 403.
+## Rutas
+- `/`
+- `/login`
+- `/register`
+- `/tasks` protegida
+- `/tasks/:taskId` protegida
+## Variables
+```env
+
+VITE_API_URL=/api
+```
+## Ejecución
+```bash
+pnpm install
+pnpm dev
+```
+La API debe ejecutarse en el puerto configurado por
+el proxy de Vite.
+## Seguridad didáctica
+El access token se conserva en sessionStorage para
+practicar restauración dentro de la pestaña. No se
+almacenan contraseñas ni se imprimen tokens. La API
+mantiene la autenticación y autorización reales.
+## Validación
+```bash
+pnpm lint
+pnpm build
+
+# Evidencias EC3 F3 A11
+## Entorno
+- Rama:
+- React:
+- React Router:
+- URL local del Frontend:
+- URL local del Backend:
+## Casos
+| Caso | HTTP | Resultado | Evidencia |
+|---|---:|---|---|
+| Registro válido | 201 | | |
+| Correo duplicado | 409 | | |
+| Login inválido | 401 | | |
+| Login válido | 200 | | |
+| /auth/me | 200 | | |
+| /tasks sin token | 401 | | |
+| CRUD con user | 2xx | | |
+| DELETE con user | 403 | | |
+| DELETE con admin | 204 | | |
+| Token alterado | 401 | | |
+## Rutas y sesión
+- Redirección a login:
+- Recuperación de la ruta intentada:
+- Restauración después de recargar:
+- Cierre y botón Atrás:
+## Calidad
+- pnpm lint:
+- pnpm build:
+- Consola del navegador:
+## Protección de datos
+Confirmo que las evidencias no muestran contraseñas,
+tokens completos, JWT_SECRET ni MONGODB_URI.

@@ -18,15 +18,11 @@ const EMPTY_META: PageMeta = {
   hasNextPage: false,
   hasPreviousPage: false,
 };
-export function useTaskList(query: TaskListQuery) {
+export function useTaskList(query: TaskListQuery, accessToken: string | null) {
   const { page, limit, search, status: statusFilter, sortBy, order } = query;
   const [state, setState] = useState<TaskListState>({
     tasks: [],
-    meta: {
-      ...EMPTY_META,
-      page,
-      limit,
-    },
+    meta: { ...EMPTY_META, page, limit },
     status: "idle",
     errorMessage: "",
   });
@@ -35,6 +31,12 @@ export function useTaskList(query: TaskListQuery) {
     setReloadKey((current) => current + 1);
   }, []);
   useEffect(() => {
+    if (!accessToken) {
+      //eliminacion del status para que no se muestre el mensaje de error cuando no hay token, ya que no es un error de la API, sino que no hay token
+      return;
+    }
+    //creacion de una constante para almacenar el token, ya que si se usa directamente accessToken en la funcion load, cuando se haga un reload, el token puede cambiar y se puede perder la referencia al token original, lo que puede causar errores en la peticion a la API
+    const token = accessToken;
     const controller = new AbortController();
     async function load(): Promise<void> {
       setState((current) => ({
@@ -52,6 +54,8 @@ export function useTaskList(query: TaskListQuery) {
             sortBy,
             order,
           },
+          //muestra del token anterior guardado en la constante token, para evitar que se pierda la referencia al token original cuando se haga un reload
+          token,
           controller.signal,
         );
         setState({
@@ -66,23 +70,32 @@ export function useTaskList(query: TaskListQuery) {
         }
         setState({
           tasks: [],
-          meta: {
-            ...EMPTY_META,
-            page,
-            limit,
-          },
+          meta: { ...EMPTY_META, page, limit },
           status: "error",
           errorMessage: getHttpErrorMessage(error),
         });
       }
     }
     void load();
-    return () => {
-      controller.abort();
-    };
-  }, [page, limit, search, statusFilter, sortBy, order, reloadKey]);
-  return {
-    ...state,
-    reload,
-  };
+    return () => controller.abort();
+  }, [
+    accessToken,
+    page,
+    limit,
+    search,
+    statusFilter,
+    sortBy,
+    order,
+    reloadKey,
+  ]);
+  //eliminacion del regreso para status "error" cuando no hay token, ya que no es un error de la API, sino que no hay token, y se debe mostrar el estado "idle" en su lugar
+  const visibleState: TaskListState = accessToken
+    ? state
+    : {
+        tasks: [],
+        meta: { ...EMPTY_META, page, limit },
+        status: "idle",
+        errorMessage: "",
+      };
+  return { ...visibleState, reload };
 }
